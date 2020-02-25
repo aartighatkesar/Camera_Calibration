@@ -4,8 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import shutil
 
-DEBUG = 0
-
+DEBUG = 0  # TODO: Replace with logger
 
 class GetCorners():
     def __init__(self, results_dir, num_horiz, num_vert, dist):
@@ -110,7 +109,7 @@ class GetCorners():
 
     def generate_world_crd(self, num_horiz, num_vert, dist):
         """
-        Generate the world coordinates in 3D, with the same ordering as corner points
+        Generate the world coordinates in 3D, with the same ordering as corner points. Consider plane in z=0 plane
         :param num_horiz: Number of horizontal lines
         :param num_vert: Number of vertical lines
         :param dist: Distance between squares on grid. Each metric unit is considered as 1 pixel
@@ -220,11 +219,12 @@ class GetCorners():
 
         return line_eqn.T
 
-    def plot_points(self, pts, img):
+    def plot_points(self, pts, img, label_pts=False):
 
         for i in range(pts.shape[0]):
             cv2.circle(img, (int(pts[i][0]), int(pts[i][1])), 2, (255, 0, 255), -1)
-            cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0))
+            if label_pts:
+                cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0))
 
         return img
 
@@ -247,7 +247,7 @@ class GetCorners():
 
         #####
 
-        img = self.plot_points(corners_hc, img)
+        img = self.plot_points(corners_hc, img, label_pts=True)
 
         crnr_fldr = os.path.join(self.results_dir, 'corners')
         if not os.path.exists(crnr_fldr):
@@ -257,8 +257,8 @@ class GetCorners():
 
         ######
 
-        print("Processing corners for {}----------------------- Done! ".format(img_path))
-        
+        print("Processing corners for {} ----------------------- Done! ".format(img_path))
+
         return corners_hc, world_crd_hc
 
 
