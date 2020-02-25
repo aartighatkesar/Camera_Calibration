@@ -6,14 +6,17 @@ import shutil
 
 DEBUG = 0
 
+
 class GetCorners():
-    def __init__(self, results_dir):
+    def __init__(self, results_dir, num_horiz, num_vert, dist):
         if os.path.exists(results_dir):
             shutil.rmtree(results_dir)
         os.makedirs(results_dir)
 
         self.results_dir = results_dir
-
+        self.num_horiz = num_horiz
+        self.num_vert = num_vert
+        self.dist = dist
 
     def remove_multiple_lines_1(self, lines, reqd_num_lines, thresh=15):
         """
@@ -71,7 +74,13 @@ class GetCorners():
             print("discarded:{}".format(lines[invalid_id]))
             print("@@@@@@@@@@@@@@@@@@@@@")
 
-        return lines[out_id]
+        # Sort according to projection. In case of horizontal lines, it would be left to right and vertical,
+        # it would be top to bottom
+        out = lines[out_id]
+        id = np.argsort(out[:, 2])
+        out = out[id]
+
+        return out
 
     def draw_lines(self, lines, img, color):
 
@@ -99,8 +108,20 @@ class GetCorners():
         return img_cpy
 
 
-    def generate_world_crd(self):
-        pass
+    def generate_world_crd(self, num_horiz, num_vert, dist):
+        """
+        Generate the world coordinates in 3D, with the same ordering as corner points
+        :param num_horiz: Number of horizontal lines
+        :param num_vert: Number of vertical lines
+        :param dist: Distance between squares on grid. Each metric unit is considered as 1 pixel
+        :return:
+        """
+        world_crd_hc = [[] for _ in range(num_vert * num_horiz)]
+        for i in range(num_horiz):
+            for j in range(num_vert):
+                world_crd_hc[i * num_vert + j] = [j * dist, i * dist, 0, 1]
+
+        return np.array(world_crd_hc)
 
 
     def get_horiz_vert_lines(self, img, outimg_name):
@@ -116,7 +137,7 @@ class GetCorners():
         vertical = lines[np.logical_not(np.logical_and(lines[:, 1] >= np.pi/6, lines[:, 1] <= 5*np.pi/6))]  # Theta ~ 0deg
         vertical = np.hstack((vertical, (vertical[:, 0:1] * np.cos(vertical[:, 1:2]))))  # Get x axis projection
 
-        out_fldr = os.path.join(self.results_dir, "corners")
+        out_fldr = os.path.join(self.results_dir, "lines")
         if not os.path.exists(out_fldr):
             os.makedirs(out_fldr)
 
@@ -144,8 +165,8 @@ class GetCorners():
         plt.close()
 
         # Process lines to discard duplicate lines
-        horizontal = self.remove_multiple_lines_1(horizontal, reqd_num_lines=10, thresh=13)
-        vertical = self.remove_multiple_lines_1(vertical, reqd_num_lines=8)
+        horizontal = self.remove_multiple_lines_1(horizontal, reqd_num_lines=self.num_horiz, thresh=13)
+        vertical = self.remove_multiple_lines_1(vertical, reqd_num_lines=self.num_vert)
 
         img = self.draw_lines(horizontal, img, (0, 255, 0))  # draw horizontal lines
         img = self.draw_lines(vertical, img, (0, 0, 255))  # draw vertical lines
@@ -161,8 +182,51 @@ class GetCorners():
 
 
     def get_intersection_of_lines(self, horizontal, vertical):
-        pass
+        """
+        Function to get intersection between horizontal and vertical lines
+        :param horizontal: N x 2( or M) with col0 -> rho, col1-> theta
+        :param vertical: N x 2(or M) with col0 -> rho, col1 -> theta
+        :return: corners rows of x, y Homogenous coordinates N x 3
+        """
+        # Number points from left to right, top to bottom
 
+
+        horizonal_HC = self.generate_line_eqns(horizontal)  # rows of [a, b, c]
+        vertical_HC = self.generate_line_eqns(vertical)
+
+        corners_hc = np.zeros((1, 3))
+
+        for i in range(horizontal.shape[0]):
+            crs = np.cross(vertical_HC, horizonal_HC[i:i+1, :])
+            corners_hc = np.vstack((corners_hc, crs))
+
+        corners_hc = corners_hc[1:, :]
+        corners_hc = corners_hc.T/corners_hc[:, 2]
+        corners_hc = corners_hc.T
+
+        return corners_hc
+
+    def generate_line_eqns(self, lines):
+
+        """
+        Generate homogenous representation of line
+        :param lines: N x 3 where col0 -> rho, col1 -> theta
+        :return:
+        """
+
+        # x*cos(theta) + y*sin(theta) - rho
+        line_eqn = [np.cos(lines[:, 1]), np.sin(lines[:, 1]), -1*lines[:, 0]]
+        line_eqn = np.array(line_eqn)
+
+        return line_eqn.T
+
+    def plot_points(self, pts, img):
+
+        for i in range(pts.shape[0]):
+            cv2.circle(img, (int(pts[i][0]), int(pts[i][1])), 2, (255, 0, 255), -1)
+            cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0))
+
+        return img
 
     def run(self, img_path):
         """
@@ -170,14 +234,32 @@ class GetCorners():
         :param img_path: Full path to image
         :return:
         """
-
+        print("Processing corners for {}".format(img_path))
         fname = os.path.basename(img_path)
         fname = fname.split('.')[0]
 
         img = cv2.imread(img_path)
         horizontal, vertical = self.get_horiz_vert_lines(img, outimg_name='lines_'+ fname + '.png')
 
+        corners_hc = self.get_intersection_of_lines(horizontal, vertical)
 
+        world_crd_hc = self.generate_world_crd(num_horiz=self.num_horiz, num_vert=self.num_vert, dist=self.dist)
+
+        #####
+
+        img = self.plot_points(corners_hc, img)
+
+        crnr_fldr = os.path.join(self.results_dir, 'corners')
+        if not os.path.exists(crnr_fldr):
+            os.makedirs(crnr_fldr)
+
+        cv2.imwrite(os.path.join(crnr_fldr, 'corners_'+ fname + '.jpg'), img)
+
+        ######
+
+        print("Processing corners for {}----------------------- Done! ".format(img_path))
+        
+        return corners_hc, world_crd_hc
 
 
 if __name__ == "__main__":
@@ -185,11 +267,10 @@ if __name__ == "__main__":
     data_fldr = "/Users/aartighatkesar/Documents/Camera_Calibration/Dataset_1"
     results_fldr = os.path.join(data_fldr, 'results')
 
-    corner_obj = GetCorners(results_fldr)
+    corner_obj = GetCorners(results_fldr, num_horiz=10, num_vert=8, dist=25)
 
     for x in os.listdir(data_fldr):
         if x.endswith('.jpg'):
-            print(x)
             corner_obj.run(os.path.join(data_fldr, x))
 
     # corner_obj.run(os.path.join(data_fldr, 'Pic_1.jpg'))
