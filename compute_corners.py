@@ -224,7 +224,7 @@ class GetCorners():
         for i in range(pts.shape[0]):
             cv2.circle(img, (int(pts[i][0]), int(pts[i][1])), 2, color, -1)
             if label_pts:
-                cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0), cv2.LINE_AA)
+                cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0))
 
         return img
 

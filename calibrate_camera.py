@@ -9,9 +9,9 @@ from scipy import optimize
 
 class CalibrateCamera:
 
-    def __init__(self, dataset_dir, num_horiz, num_vert, dist):
+    def __init__(self, dataset_dir, num_horiz, num_vert, dist, radial_dist=True, fixed_img="Pic_11.jpg"):
 
-        self.results_dir = os.path.join(dataset_dir, "results")
+        self.results_dir = os.path.join(dataset_dir, "results_{}".format(fixed_img.split(".jpg")[0].split('_')[1]))
         if not os.path.exists(self.results_dir):
             os.makedirs(self.results_dir)
 
@@ -21,7 +21,11 @@ class CalibrateCamera:
         self.num_vert = num_vert
         self.dist = dist
 
+        self.fixed_img = fixed_img
+
         self.imgs_dataset = [x for x in os.listdir(self.dataset_dir) if x.endswith('.jpg')]
+
+        self.fix_id = self.imgs_dataset.index(fixed_img)
 
         self.num_imgs_datset = len(self.imgs_dataset)
 
@@ -43,6 +47,7 @@ class CalibrateCamera:
 
         self.k1_k2_final = []
 
+        self.radial_dist = radial_dist
 
 
     def _calculate_H_per_image(self, img_crds, world_crds):
@@ -348,17 +353,6 @@ class CalibrateCamera:
 
         proj_crd = proj_crd[:, 0:2, :]  # Getting physical coordinates
 
-        # if radial_dist:
-        #     # Compute radial distortion
-        #     princ_pt = np.array([K[0][2], K[1][2]]).reshape(2,1)
-        #
-        #     radius_sq = np.sum((proj_crd-princ_pt)**2, axis=1)  # num_imgs x num_corners
-        #
-        #     mul_term = radius_sq * k1_k2[:, 0:1] + (radius_sq **2) * k1_k2[:, 1:2]  # num_imgs x num_corners
-        #
-        #     mul_term = mul_term[:, np.newaxis, :] # num_imgs x 1 x num_corners
-        #
-        #     proj_crd = proj_crd + (proj_crd - princ_pt) * mul_term
 
         if radial_dist:
             # Compute radial distortion
@@ -396,6 +390,10 @@ class CalibrateCamera:
 
     def calculate_camera_extrinsic_params_R_t(self, radial_dist=False):
 
+        print("---------------------------------------")
+        print("Calculating Camera Extrinsic parameters")
+        print("---------------------------------------")
+
         num_params = 5 + self.num_imgs_datset * 6  # 5 params for K and (3 DOF for R and 3 DOF for t)for each image
 
         x_init = np.zeros(num_params)
@@ -414,10 +412,6 @@ class CalibrateCamera:
             r_vec = self._convert_R_mat_to_vec(self.Rt[i][:, 0:3])
             x_init[5+i*6: 5+(i+1)*6] = np.hstack((r_vec, self.Rt[i][:, -1]))  # assign R vector and t of each image to init values
 
-        # if radial_dist:
-        #     k1_k2 = np.zeros((2*self.num_imgs_datset))  #[k1_img1, k2_img1, k1_img2, k2_img2....]
-        #     num_params += 2*self.num_imgs_datset
-        #     x_init = np.hstack((x_init, k1_k2))
 
         if radial_dist:
             self.k1_k2 = np.zeros(2)
@@ -473,38 +467,197 @@ class CalibrateCamera:
 
         print("-------------------------------------")
 
+        print("Calculating Camera Extrinsic parameters ------------  Done!")
+
+        print("-----------------------------------------------------------------------------------------")
+
+    def project_points_on_fixed_img(self, out_dir, radial_dist):
+
+        if not radial_dist:
+            project_fix_dir = os.path.join(out_dir, "fixed_img_pt_proj")
+
+        else:
+            project_fix_dir = os.path.join(out_dir, "fixed_img_pt_radial_dist")
 
 
+        if not os.path.exists(project_fix_dir):
+            os.makedirs(project_fix_dir)
+
+        img = cv2.imread(os.path.join(self.dataset_dir, fixed_img))
+
+        fix_orig_pts = self.corners_hc[self.fix_id]
+
+        for i in range(fix_orig_pts.shape[0]):
+            cv2.circle(img, (int(fix_orig_pts[i][0]), int(fix_orig_pts[i][1])), 2, (0, 255, 0), -1, cv2.LINE_AA)
+
+        P_fix_id = np.matmul(self.K, self.Rt[self.fix_id])
+
+        H_fix = np.zeros((3, 3))
+
+        H_fix[:, 0] = self.Rt[self.fix_id][:, 0]
+        H_fix[:, 1] = self.Rt[self.fix_id][:, 1]
+        H_fix[:, 2] = self.Rt[self.fix_id][:, 3]
+
+        H_fix = np.matmul(self.K, H_fix)
+
+        ###
+
+        H_fix_af = np.zeros((3, 3))
+
+        H_fix_af[:, 0] = self.Rt_final[self.fix_id][:, 0]
+        H_fix_af[:, 1] = self.Rt_final[self.fix_id][:, 1]
+        H_fix_af[:, 2] = self.Rt_final[self.fix_id][:, 3]
+
+        H_fix_af = np.matmul(self.K_final, H_fix_af)
 
 
+        for id, img_name in enumerate(self.imgs_dataset):
+
+            img_1 = np.copy(img)
+
+            ## Before LM
+
+            P_img = np.matmul(self.K, self.Rt[id])
+
+            H = np.zeros((3, 3))
+
+            H[:, 0] = self.Rt[id][:, 0]
+            H[:, 1] = self.Rt[id][:, 1]
+            H[:, 2] = self.Rt[id][:, 3]
+
+            H = np.matmul(self.K, H)
 
 
+            # proj_crd_init = np.matmul(np.matmul(P_fix_id, np.linalg.pinv(P_img)), self.corners_hc[id].T)  # 3 x num_corners
+
+            proj_crd_init = np.matmul(np.matmul(H_fix, np.linalg.pinv(H)), self.corners_hc[id].T)
+
+            proj_crd_init = proj_crd_init/proj_crd_init[-1, :]
+
+            proj_crd_init = proj_crd_init[0:2, :]
+
+            img_2 = np.copy(img_1)
+
+            for i in range(proj_crd_init.shape[1]):
+                cv2.circle(img_1, (int(proj_crd_init[0][i]), int(proj_crd_init[1][i])), 2, (255, 0, 0), -1, cv2.LINE_AA)
+
+            ## Projected corners after LM
+            # Compute projected corners after LM
+
+            P_img = np.matmul(self.K, self.Rt[id])
+
+            H = np.zeros((3, 3))
+
+            H[:, 0] = self.Rt_final[id][:, 0]
+            H[:, 1] = self.Rt_final[id][:, 1]
+            H[:, 2] = self.Rt_final[id][:, 3]
+
+            H = np.matmul(self.K_final, H)
+
+            P_img_fin = np.matmul(self.K, self.Rt_final[id])
+
+            proj_crd_fin = np.matmul(np.matmul(H_fix_af, np.linalg.pinv(H)), self.corners_hc[id].T)
+
+            # proj_crd_fin = np.matmul(np.matmul(P_fix_id, np.linalg.pinv(P_img_fin)), self.corners_hc[id].T)  # 3 x num_corners
+
+            proj_crd_fin = (proj_crd_fin / proj_crd_fin[-1, :])
+
+            proj_crd_fin = proj_crd_fin[0:2, :]  # 2 x num_corners
+
+            if radial_dist:
+                princ = np.array([self.K_final[0][2], self.K_final[1][2]]).reshape(2, 1)  # 2 x 1
+
+                rad_sq = np.sum((proj_crd_fin - princ) ** 2, axis=0, keepdims=True)  # 1 x num_corners
+
+                mult_term = self.k1_k2_final[0] * rad_sq + self.k1_k2_final[1] * rad_sq ** 2
+
+                proj_crd_fin = proj_crd_fin + (proj_crd_fin - princ) * mult_term
+
+            for i in range(proj_crd_fin.shape[1]):
+                cv2.circle(img_2, (int(proj_crd_fin[0][i]), int(proj_crd_fin[1][i])), 2, (255, 0, 0), -1,
+                           cv2.LINE_AA)
+
+            out_img_name = os.path.join(project_fix_dir, "{}_{}".format(img_name.split('.')[0], self.fixed_img))
+
+            cv2.imwrite(out_img_name, np.hstack((img_1, img_2)))
+
+    def project_world_pts(self, out_dir, radial_dist):
+
+        if not radial_dist:
+            project_wrld_dir = os.path.join(out_dir, "world_pt_proj")
+
+        else:
+            project_wrld_dir = os.path.join(out_dir, "world_pt_proj_radial_dist")
 
 
+        if not os.path.exists(project_wrld_dir):
+            os.makedirs(project_wrld_dir)
 
+        for id, img_name in enumerate(self.imgs_dataset):
 
+            img = cv2.imread(os.path.join(self.dataset_dir, img_name))
 
+            # Draw expected corners
 
+            actual_pts = self.corners_hc[id]
 
+            for i in range(actual_pts.shape[0]):
+                cv2.circle(img, (int(actual_pts[i][0]), int(actual_pts[i][1])), 2, (0, 255, 0), -1, cv2.LINE_AA)
 
+            # Compute projected corners before LM
+            P_init = np.matmul(self.K, self.Rt[id])
 
-    def project_points(self, out_dir):
-        pass
+            proj_crd_init = np.matmul(P_init, self.world_hc.T)
+
+            proj_crd_init = (proj_crd_init/proj_crd_init[-1, :])  #  3 x num_corners
+
+            proj_crd_init = proj_crd_init[0:2, :]  #  2 x num_corners
+
+            img_2 = np.copy(img)
+
+            for i in range(proj_crd_init.shape[1]):
+                cv2.circle(img, (int(proj_crd_init[0][i]), int(proj_crd_init[1][i])), 2, (255, 0, 0), -1, cv2.LINE_AA)
+
+            # Projected corners after LM
+
+            # Compute projected corners before LM
+            P_fin = np.matmul(self.K_final, self.Rt_final[id])
+
+            proj_crd_fin = np.matmul(P_fin, self.world_hc.T)
+
+            proj_crd_fin = (proj_crd_fin / proj_crd_fin[-1, :])
+
+            proj_crd_fin = proj_crd_fin[0:2, :]  # 2 x num_corners
+
+            if radial_dist:
+                princ = np.array([self.K_final[0][2], self.K_final[1][2]]).reshape(2, 1)  # 2 x 1
+
+                rad_sq = np.sum((proj_crd_fin - princ) ** 2, axis=0, keepdims=True)  # 1 x num_corners
+
+                mult_term = self.k1_k2_final[0] * rad_sq + self.k1_k2_final[1] * rad_sq ** 2
+
+                proj_crd_fin = proj_crd_fin + (proj_crd_fin - princ) * mult_term
+
+            for i in range(proj_crd_fin.shape[1]):
+                cv2.circle(img_2, (int(proj_crd_fin[0][i]), int(proj_crd_fin[1][i])), 2, (255, 0, 0), -1,
+                           cv2.LINE_AA)
+
+            fin_img = os.path.join(project_wrld_dir, "world_proj_{}".format(img_name))
+            cv2.imwrite(fin_img, np.hstack((img, img_2)))
+
 
     def run(self):
         self.calculate_camera_intrinsic_params_K()
 
-        self.calculate_camera_extrinsic_params_R_t(radial_dist=True)
+        self.calculate_camera_extrinsic_params_R_t(radial_dist=self.radial_dist)
 
+        out_dir = os.path.join(self.results_dir, "self_proj")
 
+        self.project_world_pts(out_dir, radial_dist=self.radial_dist)
 
+        out_dir = os.path.join(self.results_dir, "{}_proj".format(self.fixed_img.split('.')[0]))
 
-
-
-
-
-
-
+        self.project_points_on_fixed_img(out_dir, radial_dist=self.radial_dist)
 
 
 if __name__ == "__main__":
@@ -513,9 +666,9 @@ if __name__ == "__main__":
     num_horiz = 10
     num_vert = 8
     dist = 25
-    fixed_img = "Pic_11.jpg"
+    fixed_img = "Pic_28.jpg"
 
-    calibration_obj = CalibrateCamera(dataset_dir, num_horiz, num_vert, dist)
+    calibration_obj = CalibrateCamera(dataset_dir, num_horiz, num_vert, dist, radial_dist=False, fixed_img=fixed_img)
     calibration_obj.run()
 
 
