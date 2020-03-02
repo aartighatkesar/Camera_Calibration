@@ -3,6 +3,9 @@ from compute_corners import GetCorners
 
 import os
 import numpy as np
+import cv2
+from scipy import optimize
+
 
 class CalibrateCamera:
 
@@ -24,6 +27,23 @@ class CalibrateCamera:
 
         self.H = {}
 
+        self.Rt = [[] for _ in range(self.num_imgs_datset)]  # ordered according to imgs_dataset list
+
+        self.K = 0
+
+        self.corners_hc = [[] for _ in range(self.num_imgs_datset)]
+
+        self.world_hc = 0
+
+        self.K_final = []
+
+        self.Rt_final = []
+
+        self.k1_k2 = np.array([0, 0])
+
+        self.k1_k2_final = []
+
+
 
     def _calculate_H_per_image(self, img_crds, world_crds):
         """
@@ -42,7 +62,6 @@ class CalibrateCamera:
 
         return H
 
-
     def calculate_H_dataset(self):
         """
         Function to calculate the Homography between plane in 3D and image plane
@@ -55,29 +74,436 @@ class CalibrateCamera:
 
         corner_Obj = GetCorners(results_dir=corner_dir, num_horiz=self.num_horiz, num_vert=self.num_vert, dist=self.dist)
 
-        for img_name in self.imgs_dataset:
+        for i, img_name in enumerate(self.imgs_dataset):
             img_path = os.path.join(self.dataset_dir, img_name)
 
-            corners_hc, world_crd_hc = corner_Obj.run(img_path)
+            self.corners_hc[i], world_crd_hc = corner_Obj.run(img_path)
             print("Calculating Homography")
-            self.H[img_name] = self._calculate_H_per_image(corners_hc, world_crd_hc)
+            self.H[img_name] = self._calculate_H_per_image(self.corners_hc[i], world_crd_hc)
             print("Calculating Homography -------------- Done !")
             print("----------------------------------------------")
 
+        self.world_hc = world_crd_hc
 
 
-    def _build_equtions_abs_conic_img(self):
+    def _build_equations_img_abs_conic(self):
+
+        def _build_matrix_v_ij(H, i, j):
+            """
+            Function to build matrix v_ij (Eqn 8 in paper) # Warning: the numbers and i,j should be flipped in equation
+            :param H: 3 x 3 homography matrix
+            :return: v based on eqn 8. (6,) ndarray
+            """
+            v = [
+                H[0][i - 1] * H[0][j - 1],
+                H[0][i - 1] * H[1][j - 1] + H[1][i - 1] * H[0][j - 1],
+                H[1][i - 1] * H[1][j - 1],
+                H[2][i - 1] * H[0][j - 1] + H[0][i - 1] * H[2][j - 1],
+                H[2][i - 1] * H[1][j - 1] + H[1][i - 1] * H[2][j - 1],
+                H[2][i - 1] * H[2][j - 1]
+            ]
+
+            return np.array(v)
+
+        V = []
+
+        for key in self.H.keys():
+            V.append(_build_matrix_v_ij(self.H[key], 1, 2))
+            V.append(_build_matrix_v_ij(self.H[key], 1, 1) - _build_matrix_v_ij(self.H[key], 2, 2))
+
+        V = np.array(V)
+
+        assert V.shape[0] == 2*self.num_imgs_datset and V.shape[1] == 6, 'Incorrect dimensions for matrix V'
+
+        return V
+
+    def _calculate_img_abs_conic(self):
+        """
+        Function to build equations for solving for omega (image of absolute conic)
+        :return:
+        """
+        print("Calculating image of absolute conic")
+
+        mat_V = self._build_equations_img_abs_conic()  # Eqn 8 in paper
+
+        U, sig, Vt = np.linalg.svd(mat_V)  # Solution to mat_V*b is the last col of V
+        # which corresponds to smallest eigen value of mat_V based on Linear Least Squares solution
+
+        V = Vt.T
+
+        b = V[:, -1]  # [w11, w12, w22, w13, w23, w33]
+
+        def _build_matrix_w(b):
+            W = np.zeros((3,3))
+            W[0][0] = b[0]  # w11
+            W[0][1] = W[1][0] = b[1]  # w12, w21
+            W[1][1] = b[2] # w22
+            W[0][2] = W[2][0] = b[3] # w13, w31
+            W[1][2] = W[2][1] = b[4]  # w23, w32
+            W[2][2] = b[5] # w33
+
+            return W
+
+        omega = _build_matrix_w(b)
+
+        return omega
+
+
+    def _calculate_K_from_img_abs_conic(self, omega):
+
+        print("Calculating K from image of absolute conic")
+
+        v0 = (omega[0][1]*omega[0][2] - omega[0][0]*omega[1][2])/(omega[0][0]*omega[1][1] - omega[0][1]**2)
+
+        lmda = omega[2][2] - ((omega[0][2]**2 + v0*(omega[0][1]*omega[0][2] - omega[0][0]*omega[1][2]))/omega[0][0])
+
+        alpha = np.sqrt((lmda/omega[0][0]))
+
+        beta = np.sqrt((lmda*omega[0][0])/(omega[0][0]*omega[1][1] - omega[0][1]**2))
+
+        gamma = -1 * (omega[0][1]*(alpha**2)*beta)/lmda
+
+        u0 = (gamma*v0/beta) - (omega[0][2]*(alpha**2)/lmda)
+
+        K = [[alpha, gamma, u0], [0, beta, v0], [0, 0, 1]]
+
+        return np.array(K)
+
+
+    def _calculate_R_t_init(self):
+        """
+        Function to calculate initial R and T matrix
+        :return:
+        """
+
+        def _build_initial_R_t(K, H):
+            R = np.zeros((3, 3))
+            t = np.zeros((3, 1))
+
+            K_inv = np.linalg.inv(K)
+
+            R[:, 0] = np.dot(K_inv, H[:, 0])  # r1 = Kinv*h1
+            R[:, 1] = np.dot(K_inv, H[:, 1])  # r2 = Kinv *h2
+            R[:, 2] = np.cross(R[:, 0], R[:, 1])  # r3 = r1 x r2
+            t = np.dot(K_inv, H[:, 2])  # t = Kinv * h3
+
+            scaling = 1 / np.linalg.norm(R[:, 0])
+
+            R = R * scaling
+            t = t * scaling
+
+            return R, t
+
+        Rt = [[] for _ in range(self.num_imgs_datset)]
+
+
+        for i, img_name in enumerate(self.imgs_dataset):
+            print("Processing initial R and t values for {} -> {}".format(img_name, i))
+            R_out, t_out = _build_initial_R_t(self.K, self.H[img_name])
+
+            R_out = self._condition_R_mat(R_out)
+
+            Rt[i] = np.hstack((R_out, t_out[:, np.newaxis]))
+
+        return Rt
+
+    @staticmethod
+    def _convert_R_mat_to_vec(R_mat):
+        """
+        Use rodiriguez formula to convert R matrix to R vector with 3 DoF
+        :return:
+        """
+        phi = np.arccos((np.trace(R_mat)-1)/2)
+
+        R_vec = np.array([R_mat[2][1] - R_mat[1][2], R_mat[0][2] - R_mat[2][0], R_mat[1][0] - R_mat[0][1]])
+
+        R_vec = R_vec * (phi/(2*np.sin(phi)))
+
+        # print("-------- R mat to vec-----------")
+        # print(cv2.Rodrigues(R_mat)[0])
+        # print(w)
+        # print("-------- R mat to vec-----------")
+
+        return R_vec
+
+
+    @staticmethod
+    def _convert_R_vec_to_mat(R_vec):
+        """
+        Function to convert R vector computed using Rodriguez formula back to a mtrix
+        R_vec = [wx, wy, wz]
+        :return:
+        """
+
+        phi = np.linalg.norm(R_vec)
+        Wx = np.zeros((3,3))
+
+        Wx[0][1] = -1*R_vec[2]
+        Wx[0][2] = R_vec[1]
+
+        Wx[1][0] = R_vec[2]
+        Wx[1][2] = -1*R_vec[0]
+
+        Wx[2][0] = -1*R_vec[1]
+        Wx[2][1] = R_vec[0]
+
+        R_mat = np.eye(3) + (np.sin(phi)/phi) * Wx + ((1-np.cos(phi))/phi**2)*np.dot(Wx, Wx)
+
+        # print("-------- R vec to mat-----------")
+        # print(cv2.Rodrigues(R_vec[:, np.newaxis])[0])
+        # print(R_mat)
+        # print("-------- R vec to mat-----------")
+
+        return R_mat
+
+    def _condition_R_mat(self, R):
+        """
+        Function to normalize computed matrix R
+        :param R:
+        :return:
+        """
+        U, sig, Vt = np.linalg.svd(R)
+
+        return np.dot(U, Vt)
+
+    def optimize_params(self):
         pass
 
-    def _calculate_image_abs_conic(self):
-        pass
+    @staticmethod
+    def compute_residuals(x, img_hc, world_hc, radial_dist=False):
+        """
+
+        :param x: np array - variables to optimize
+        0:5 (K -> u0, v0, alpha, beta, gamma)
+        Then 3 entries of R ,followed by 3 entries for t for each img
+        If radial dist is True, then followed by k1, k2 for each img
+
+        x = [alpha, gamma, u0, beta, v0,  r1_1, r2_1, r3_1, t1_1, t2_1, t3_1, r1_2, r2_2, r3_2, t1_2, t2_2, t3_2...... k1_1, k2_1, k1_2, k2_2,....]
+
+        :param img_hc: List of lists of all actual img pts
+        :param world_hc: np array of rows of world pts
+        :param radial_dist: bool, whether to take radial distortion into account
+        :return:
+        """
+        num_corners = world_hc.shape[0]
+        num_imgs = len(img_hc)
+        K_val = x[0:5]
+
+        K = np.zeros((3,3))
+        #  Build K
+        K[0][0] = x[0]
+        K[0][1] = x[1]
+        K[0][2] = x[2]
+        K[1][1] = x[3]
+        K[1][2] = x[4]
+        K[2][2] = 1
+
+
+        # Build R, t for each img and compute P = K[R|t]
+        P = [[] for _ in range(num_imgs)]
+
+        for i in range(num_imgs):
+            Rt_vec = x[5+i*6: 5+(i+1)*6]
+
+            R = CalibrateCamera._convert_R_vec_to_mat(Rt_vec[0:3])
+            Rt = np.hstack((R, Rt_vec[3:].reshape(3, 1)))
+
+            P[i] = np.matmul(K, Rt)
+
+        # if radial_dist:
+        #
+        #     # Build k1, k2 for each image
+        #     num_params_krt = 5 + (6 * num_imgs)
+        #     k1_k2 = [[] for _ in range(num_imgs)]
+        #
+        #     for i in range(num_imgs):
+        #         k1_k2[i] = x[num_params_krt + i*2: num_params_krt + (i+1)*2]
+        #
+        #     k1_k2 = np.array(k1_k2)  # Num_imgs x 2
+        #     CalibrateCamera.k1_k2 = k1_k2
+
+        if radial_dist:
+            # Build k1_k2
+            num_params_krt = 5 + (6 * num_imgs)
+            k1_k2 = x[num_params_krt:]
+
+
+        # Compute projections per image, per corner
+
+        # world_hc = <num_corners> rows of x, y, z, w
+        # image = list of nd arrays. Each nd array has rows of [x, y, z]
+
+        img_hc = np.array(img_hc)  #shape = Num_imgs, num_corners, 3
+        assert img_hc.shape == (num_imgs, num_corners, 3)
+
+        img_hc = np.swapaxes(img_hc, 1, 2)  # shape = num_imgs, 3, num_corners
+        img_hc = img_hc[:, 0:2, :]
+
+
+        P = np.array(P)  # shape = num_imgs, 3, 4
+
+        proj_crd = np.matmul(P, world_hc.T)  # Proj_crd shape = num_imgs, 3, num_corners
+
+        proj_crd = proj_crd/ proj_crd[:, 2:3, :]  # normalizing last crd
+
+        proj_crd = proj_crd[:, 0:2, :]  # Getting physical coordinates
+
+        # if radial_dist:
+        #     # Compute radial distortion
+        #     princ_pt = np.array([K[0][2], K[1][2]]).reshape(2,1)
+        #
+        #     radius_sq = np.sum((proj_crd-princ_pt)**2, axis=1)  # num_imgs x num_corners
+        #
+        #     mul_term = radius_sq * k1_k2[:, 0:1] + (radius_sq **2) * k1_k2[:, 1:2]  # num_imgs x num_corners
+        #
+        #     mul_term = mul_term[:, np.newaxis, :] # num_imgs x 1 x num_corners
+        #
+        #     proj_crd = proj_crd + (proj_crd - princ_pt) * mul_term
+
+        if radial_dist:
+            # Compute radial distortion
+            princ_pt = np.array([K[0][2], K[1][2]]).reshape(2,1)
+
+            radius_sq = np.sum((proj_crd-princ_pt)**2, axis=1)  # num_imgs x num_corners
+
+            mul_term = radius_sq * k1_k2[0] + (radius_sq **2) * k1_k2[1]  # num_imgs x num_corners
+
+            mul_term = mul_term[:, np.newaxis, :] # num_imgs x 1 x num_corners
+
+            proj_crd = proj_crd + (proj_crd - princ_pt) * mul_term
+
+
+        # compute residual
+        residual = img_hc.ravel() - proj_crd.ravel()
+
+        return residual
 
     def calculate_camera_intrinsic_params_K(self):
 
+        print("---------------------------------------")
+        print("Calculating Camera Intrinsic parameters")
+        print("---------------------------------------")
+
         self.calculate_H_dataset()
 
-        # print(self.H)
+        omega = self._calculate_img_abs_conic()
+
+        self.K = self._calculate_K_from_img_abs_conic(omega)
+
+        print("Calculating Camera Intrinsic parameters ------------  Done!")
+
+        print("-----------------------------------------------------------------------------------------")
+
+    def calculate_camera_extrinsic_params_R_t(self, radial_dist=False):
+
+        num_params = 5 + self.num_imgs_datset * 6  # 5 params for K and (3 DOF for R and 3 DOF for t)for each image
+
+        x_init = np.zeros(num_params)
+
+        #####  Initialize x_init with K values ######
+        # K = [[alpha, gamma, u0], [0, beta, v0], [0, 0, 1]]
+        x_init[0] = self.K[0][0]
+        x_init[1] = self.K[0][1]
+        x_init[2] = self.K[0][2]
+        x_init[3] = self.K[1][1]
+        x_init[4] = self.K[1][2]
+
+        self.Rt = self._calculate_R_t_init()
+
+        for i in range(self.num_imgs_datset):
+            r_vec = self._convert_R_mat_to_vec(self.Rt[i][:, 0:3])
+            x_init[5+i*6: 5+(i+1)*6] = np.hstack((r_vec, self.Rt[i][:, -1]))  # assign R vector and t of each image to init values
+
+        # if radial_dist:
+        #     k1_k2 = np.zeros((2*self.num_imgs_datset))  #[k1_img1, k2_img1, k1_img2, k2_img2....]
+        #     num_params += 2*self.num_imgs_datset
+        #     x_init = np.hstack((x_init, k1_k2))
+
+        if radial_dist:
+            self.k1_k2 = np.zeros(2)
+            x_init = np.hstack((x_init, self.k1_k2))
+
+        sol = optimize.least_squares(CalibrateCamera.compute_residuals, x_init, args=(self.corners_hc, self.world_hc), kwargs={'radial_dist':radial_dist},
+                                     method='lm',
+                                     xtol=1e-15, ftol=1e-15)
+
+        ### Build K, R, t from solution
+
+        # K = [[alpha, gamma, u0], [0, beta, v0], [0, 0, 1]]
+        self.K_final = np.zeros_like(self.K)
+        self.K_final[0][0] = sol.x[0]
+        self.K_final[0][1] = sol.x[1]
+        self.K_final[0][2] = sol.x[2]
+        self.K_final[1][1] = sol.x[3]
+        self.K_final[1][2] = sol.x[4]
+        self.K_final[2][2] = 1
+
+        self.Rt_final = [[] for _ in range(self.num_imgs_datset)]
+
+        for i in range(self.num_imgs_datset):
+
+            Rt_i = sol.x[5+i*6: 5+(i+1)*6]
+            R_i = self._convert_R_vec_to_mat(Rt_i[0:3])
+            self.Rt_final[i] = np.hstack((R_i, Rt_i[3:].reshape(3,1)))
+
+        # if radial_dist:
+        #     self.k1_k2_final = [[] for _ in range(self.num_imgs_datset)]
+        #     num_params_krt = 5 + self.num_imgs_datset * 6
+        #     for i in range(self.num_imgs_datset):
+        #         self.k1_k2_final[i] = sol.x[num_params_krt + i*2: num_params_krt + (i+1)*2]
+
+        if radial_dist:
+            num_params_krt = 5 + self.num_imgs_datset * 6
+            self.k1_k2_final = sol.x[num_params_krt:]
+
+        print("-------------------------------------")
+
+        print("Inital_K: {}".format(self.K))
+        print("final_K: {}".format(self.K_final))
+
+        print("------")
+
+        print("Inital_K1_k2: {}".format(self.k1_k2))
+        print("final_K1_k2: {}".format(self.k1_k2_final))
+
+        print("------")
+
+        print("Inital_Rt: {}".format(self.Rt[0]))
+        print("final_Rt: {}".format(self.Rt_final[0]))
+
+        print("-------------------------------------")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def project_points(self, out_dir):
         pass
+
+    def run(self):
+        self.calculate_camera_intrinsic_params_K()
+
+        self.calculate_camera_extrinsic_params_R_t(radial_dist=True)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -87,7 +513,9 @@ if __name__ == "__main__":
     num_horiz = 10
     num_vert = 8
     dist = 25
+    fixed_img = "Pic_11.jpg"
 
     calibration_obj = CalibrateCamera(dataset_dir, num_horiz, num_vert, dist)
-    calibration_obj.calculate_camera_intrinsic_params_K()
+    calibration_obj.run()
+
 

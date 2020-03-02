@@ -113,7 +113,7 @@ class GetCorners():
         :param num_horiz: Number of horizontal lines
         :param num_vert: Number of vertical lines
         :param dist: Distance between squares on grid. Each metric unit is considered as 1 pixel
-        :return:
+        :return: world homogeneous crd : nd array with rows of [x, y, z, w]
         """
         world_crd_hc = [[] for _ in range(num_vert * num_horiz)]
         for i in range(num_horiz):
@@ -199,7 +199,7 @@ class GetCorners():
             crs = np.cross(vertical_HC, horizonal_HC[i:i+1, :])
             corners_hc = np.vstack((corners_hc, crs))
 
-        corners_hc = corners_hc[1:, :]
+        corners_hc = corners_hc[1:, :]  # Remove first row which has all zeros
         corners_hc = corners_hc.T/corners_hc[:, 2]
         corners_hc = corners_hc.T
 
@@ -219,14 +219,25 @@ class GetCorners():
 
         return line_eqn.T
 
-    def plot_points(self, pts, img, label_pts=False):
+    def plot_points(self, pts, img, color=(255, 0, 255), label_pts=False):
 
         for i in range(pts.shape[0]):
-            cv2.circle(img, (int(pts[i][0]), int(pts[i][1])), 2, (255, 0, 255), -1)
+            cv2.circle(img, (int(pts[i][0]), int(pts[i][1])), 2, color, -1)
             if label_pts:
-                cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0))
+                cv2.putText(img, "{}".format(i), (int(pts[i][0])-5, int(pts[i][1])-5), 0, 0.5, (255, 255, 0), cv2.LINE_AA)
 
         return img
+
+    def refine_corners_subpix(self, gray_img, corners_hc):
+
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        refined_corners = np.asarray(np.round(corners_hc[:, np.newaxis, 0:2]), dtype=np.float32)
+        cv2.cornerSubPix(gray_img, refined_corners, (11, 11), (-1, -1), criteria)
+        refined_corners = np.squeeze(refined_corners)
+
+        refined_corners = np.concatenate((refined_corners, np.ones((refined_corners.shape[0], 1))), axis=1)
+        return refined_corners
+
 
     def run(self, img_path):
         """
@@ -238,7 +249,10 @@ class GetCorners():
         fname = os.path.basename(img_path)
         fname = fname.split('.')[0]
 
+
+
         img = cv2.imread(img_path)
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         horizontal, vertical = self.get_horiz_vert_lines(img, outimg_name='lines_'+ fname + '.png')
 
         corners_hc = self.get_intersection_of_lines(horizontal, vertical)
@@ -253,13 +267,18 @@ class GetCorners():
         if not os.path.exists(crnr_fldr):
             os.makedirs(crnr_fldr)
 
-        cv2.imwrite(os.path.join(crnr_fldr, 'corners_'+ fname + '.jpg'), img)
+        cv2.imwrite(os.path.join(crnr_fldr, 'corners_before'+ fname + '.jpg'), img)
 
         ######
 
+        refined_corners_hc = self.refine_corners_subpix(gray_img, corners_hc)
+
+        img = self.plot_points(refined_corners_hc, img, color=(0, 255, 0), label_pts=False)
+        cv2.imwrite(os.path.join(crnr_fldr, 'corners_after' + fname + '.jpg'), img)
+
         print("Processing corners for {} ----------------------- Done! ".format(img_path))
 
-        return corners_hc, world_crd_hc
+        return refined_corners_hc, world_crd_hc
 
 
 if __name__ == "__main__":
