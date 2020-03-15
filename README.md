@@ -55,5 +55,5 @@ python calibrate_camera.py
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
 
 #### Corners and refinement
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="320" height="240" />
-Corners before (found by intersection of hough lines) and after refinement 
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="448" height="336" />
+Corners before in **Magenta** (found by intersection of hough lines) and after refinement in **Green**
