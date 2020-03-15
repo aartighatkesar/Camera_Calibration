@@ -73,8 +73,8 @@ _Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and aft
 
 #### No Radial Distortion included
 _Projecting the world coordinates of Pic_28.jpg using the calculated camera matrix. The left image is before the LM optimization for refinement of parameters. 
-The right image is after the refinement of parameters. Green are the estimated projection of world coordinates in image plane using camera matrix. 
-Blue are the ground truth image plane projections of world coordinates._
+The right image is after the refinement of parameters. Blue are the estimated projection of world coordinates in image plane using camera matrix. 
+Green are the ground truth image plane projections of world coordinates._
 <br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="1000" height="480" />
 <br/>
@@ -85,8 +85,8 @@ _Projecting image coordinate estimation of world coordinates using Pic_40.jpg ca
 
 #### Radial Distortion included
 _Projecting the world coordinates of Pic_28.jpg using the calculated camera matrix. The left image is before the LM optimization for refinement of parameters. 
-The right image is after the refinement of parameters. Green are the estimated projection of world coordinates in image plane using camera matrix. 
-Blue are the ground truth image plane projections of world coordinates._
+The right image is after the refinement of parameters. Blue are the estimated projection of world coordinates in image plane using camera matrix. 
+Green are the ground truth image plane projections of world coordinates._
 <br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="1000" height="480" />
 <br/>
