@@ -61,7 +61,7 @@ Corners before in **Magenta** (found by intersection of hough lines) and after r
 #### Camera Intrinsic and Extrinsic Parameters
 No radial
 
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_radial.svg" alt="Corners after processing" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_radial.png" alt="Corners after processing" width="448" height="336" />
 
 
 
