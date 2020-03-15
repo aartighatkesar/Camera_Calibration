@@ -61,22 +61,7 @@ Corners before in **Magenta** (found by intersection of hough lines) and after r
 #### Camera Intrinsic and Extrinsic Parameters
 No radial
 
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/CodeCogsEqn.gif" alt="Corners after processing" width="448" height="336" />
-
-Pic_28.jpg
-\newline 
-[R|t]_{before_LM} = \begin{bmatrix}0.999164 & -0.012284 & -0.039003 & -82.948293 \\0.009482 & 0.997415 & -0.071229 & -106.920918 \\0.039777 & 0.070800 & 0.996697 & 384.426341\end{bmatrix}
-\newline 
-K_{before_LM} = \begin{bmatrix}718.828007 & 1.526105 & 323.685590 \\0.000000 & 719.598935 & 238.890431 \\0.000000 & 0.000000 & 1.000000\end{bmatrix}
-
-\newline 
-[R|t]_{after_LM} = \begin{bmatrix}0.999152 & -0.012671 & -0.039180 & -82.644773 \\0.009831 & 0.997368 & -0.071836 & -107.248507 \\0.039987 & 0.071390 & 0.996647 & 386.385969\end{bmatrix}
-
-\newline 
-K_{after_LM} = \begin{bmatrix}722.271206 & 2.079321 & 323.254571 \\0.000000 & 722.835470 & 239.294832 \\0.000000 & 0.000000 & 1.000000\end{bmatrix}
-
-\newline 
-
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_radial.svg" alt="Corners after processing" width="448" height="336" />
 
 
 
