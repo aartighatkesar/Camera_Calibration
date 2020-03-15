@@ -46,7 +46,8 @@ python calibrate_camera.py
 - [Input dataset - click click](./Dataset_1)
 - [Results for Input Dataset - more clicks](./results)
 
-![](./images_for_readme/input_imgs/Pic_28.jpg =100x20)
+|<img src="https://github.com/aartighatkesar/Camera_Calibration/tree/in-progress/images_for_readme/input_imgs/Pic_28.jpg" alt="Pic_28.jpg" width="234" height="416" /> Pic_28.jpg
+|<img src="https://github.com/aartighatkesar/Camera_Calibration/tree/in-progress/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="234" height="416" /> Pic_40.jpg  
 
 
 
