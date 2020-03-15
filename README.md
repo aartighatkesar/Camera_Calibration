@@ -59,24 +59,11 @@ python calibrate_camera.py
 Corners before in **Magenta** (found by intersection of hough lines) and after refinement in **Green**
 
 #### Camera Intrinsic and Extrinsic Parameters
-No radial
-
+Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - Without Radial Distortion incorportated
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_Radial.png" alt="Corners after processing" width="448" height="336" />
 
 
+Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - WITH Radial Distortion incorportated
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_Radial.png" alt="Corners after processing" width="448" height="336" />
 
-Radial
 
-Pic_28.jpg
-\newline 
-[R|t]_{before_LM} = \begin{bmatrix}0.999164 & -0.012284 & -0.039003 & -82.948293 \\0.009482 & 0.997415 & -0.071229 & -106.920918 \\0.039777 & 0.070800 & 0.996697 & 384.426341\end{bmatrix}
-\newline 
-K_{before_LM} = \begin{bmatrix}718.828007 & 1.526105 & 323.685590 \\0.000000 & 719.598935 & 238.890431 \\0.000000 & 0.000000 & 1.000000\end{bmatrix}
-
-\newline 
-[R|t]_{after_LM} = \begin{bmatrix}0.999240 & -0.012416 & -0.036955 & -81.681439 \\0.009835 & 0.997552 & -0.069230 & -107.749536 \\0.037724 & 0.068814 & 0.996916 & 385.933925\end{bmatrix}
-
-\newline 
-K_{after_LM} = \begin{bmatrix}728.223056 & 2.059118 & 321.428069 \\0.000000 & 729.335552 & 240.131452 \\0.000000 & 0.000000 & 1.000000\end{bmatrix}
-
-\newline 
