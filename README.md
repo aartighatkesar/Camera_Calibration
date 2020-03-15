@@ -60,9 +60,19 @@ Corners before in **Magenta** (found by intersection of hough lines) and after r
 
 #### Camera Intrinsic and Extrinsic Parameters
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_Radial.png" alt="Corners after processing" width="448" height="336" />
+<br/>
 Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - Without Radial Distortion incorportated
-
 <br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_Radial.png" alt="Corners after processing" width="448" height="336" />
+<br/>
 Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - WITH Radial Distortion incorportated
+<br/>
 
+#### Visual Results of Camera Parameters
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="448" height="336" />
+
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="448" height="336" />
+
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="448" height="336" />
+
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28_with_radial.jpg" width="448" height="336" />
