@@ -53,7 +53,7 @@ python calibrate_camera.py
 <br/>
 _Pic_40.jpg_
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" /> Pic_40.jpg  
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" />  
 <br/>
 
 #### Hough Lines and Processing
