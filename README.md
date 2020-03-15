@@ -69,10 +69,10 @@ Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and afte
 <br/>
 
 #### Visual Results of Camera Parameters
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="640" height="480" />
 
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="640" height="480" />
 
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="640" height="480" />
 
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28_with_radial.jpg" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28_with_radial.jpg" width="640" height="480" />
