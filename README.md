@@ -57,6 +57,7 @@ python calibrate_camera.py
 #### Corners and refinement
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="448" height="336" />
 Corners before in **Magenta** (found by intersection of hough lines) and after refinement in **Green**
+These corners would be used as ground truth image coordinates for the projection of world coordinates
 
 #### Camera Intrinsic and Extrinsic Parameters
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_Radial.png" alt="Corners after processing" width="448" height="336" />
@@ -69,10 +70,20 @@ Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and afte
 <br/>
 
 #### Visual Results of Camera Parameters
+
+#### No Radial Distortion included
+Projecting the world coordinates of Pic_28.jpg using the calculated camera matrix. The left image is before the LM optimization for refinement of parameters. 
+The right image is after the refinement of parameters. Green are the estimated projection of world coordinates in image plane using camera matrix. 
+Blue are the ground truth image plane projections of world coordinates.
+
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="1000" height="480" />
+<br/>
+
+_Projecting image coordinate estimation of world coordinates using Pic_40.jpg camera matrix onto Pic_28.jpg_
+<br/>
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="1000" height="480" />
 
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="1000" height="480" />
 
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="1000" height="480" />
 
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28_with_radial.jpg" width="1000" height="480" />
