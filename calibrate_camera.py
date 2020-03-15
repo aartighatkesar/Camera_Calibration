@@ -581,6 +581,49 @@ class CalibrateCamera:
 
             cv2.imwrite(out_img_name, np.hstack((img_1, img_2)))
 
+    def generate_latex_equations(self, out_dir):
+
+        file_name = os.path.join(out_dir, "Latex")
+
+        with open(file_name, 'w') as fh:
+
+            for i, img_name in enumerate(self.imgs_dataset):
+                fh.write("---------------------- \n")
+                fh.write("{}\n".format(img_name))
+                fh.write("\\newline \n")
+
+                st = " \\\\".join([" & ".join(map('{0:.6f}'.format, line)) for line in self.Rt[i]])
+                st = "\\begin{bmatrix}" + st + "\end{bmatrix}"
+                fh.write("[R|t]_{} = {}\n".format("{before_LM}", st))
+
+                fh.write("\\newline \n")
+
+                st = " \\\\".join([" & ".join(map('{0:.6f}'.format, line)) for line in self.K])
+                st = "\\begin{bmatrix}" + st + "\end{bmatrix}"
+                fh.write("K_{} = {}\n".format("{before_LM}", st))
+
+                fh.write("\n")
+                fh.write("\\newline \n")
+
+                st = " \\\\".join([" & ".join(map('{0:.6f}'.format, line)) for line in self.Rt_final[i]])
+                st = "\\begin{bmatrix}" + st + "\end{bmatrix}"
+                fh.write("[R|t]_{} = {}\n".format("{after_LM}", st))
+
+                fh.write("\n")
+                fh.write("\\newline \n")
+
+                st = " \\\\".join([" & ".join(map('{0:.6f}'.format, line)) for line in self.K_final])
+                st = "\\begin{bmatrix}" + st + "\end{bmatrix}"
+                fh.write("K_{} = {}\n".format("{after_LM}", st))
+
+                fh.write("\n")
+                fh.write("\\newline \n")
+
+
+
+
+        pass
+
     def project_world_pts(self, out_dir, radial_dist):
 
         if not radial_dist:
@@ -589,9 +632,10 @@ class CalibrateCamera:
         else:
             project_wrld_dir = os.path.join(out_dir, "world_pt_proj_radial_dist")
 
-
         if not os.path.exists(project_wrld_dir):
             os.makedirs(project_wrld_dir)
+
+        self.generate_latex_equations(project_wrld_dir)
 
         for id, img_name in enumerate(self.imgs_dataset):
 
@@ -660,15 +704,20 @@ class CalibrateCamera:
         self.project_points_on_fixed_img(out_dir, radial_dist=self.radial_dist)
 
 
+
+
+
+
+
 if __name__ == "__main__":
 
     dataset_dir = "/Users/aartighatkesar/Documents/Camera_Calibration/Dataset_1"
     num_horiz = 10
     num_vert = 8
     dist = 25
-    fixed_img = "Pic_28.jpg"
+    fixed_img = "Pic_6.jpg"
 
-    calibration_obj = CalibrateCamera(dataset_dir, num_horiz, num_vert, dist, radial_dist=False, fixed_img=fixed_img)
+    calibration_obj = CalibrateCamera(dataset_dir, num_horiz, num_vert, dist, radial_dist=True, fixed_img=fixed_img)
     calibration_obj.run()
 
 

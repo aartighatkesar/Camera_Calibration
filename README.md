@@ -20,10 +20,9 @@ Implementation of Zhang's Camera Calibration algorithm to estimate a camera's ex
 14. Rebuild estimated K matrix from 1D vector after optimization
 ```
 
-#### Original Paper:
-[**Zhang_technical_report.pdf**](./Zhang_technical_report.pdf)
+#### Original Paper: [**Zhang_technical_report.pdf**](./Zhang_technical_report.pdf)
 
-Refer [here](./My%20Notes) for technical explanation
+Refer [here](./My%20Notes) for the mathematical formulation and technical explanation
 
 
 #### Dependencies
@@ -33,7 +32,7 @@ Refer [here](./My%20Notes) for technical explanation
 - SciPy (for Levenberg-Marquardt implementation)
 
 ## Scripts
-- [**calibrate_camera.py**](./calibrate_camera.py): **_MAIN_** file to run. Pass the correct parent folder and image list in the script. Result folder with all intermediate images and final panorama are generated in /<parent_folder>/results
+- [**calibrate_camera.py**](./calibrate_camera.py): **_MAIN_** file to run. Pass the correct parent folder and image list in the script. Result folder with all intermediate images are generated in /<parent_folder>/results_<fixed_img_no>
 ```python
 python calibrate_camera.py
 ```
@@ -41,4 +40,10 @@ python calibrate_camera.py
 ###### Supporting scripts
 - [**compute_corners.py**](./compute_corners.py): Script to get coordinates of corners by intersection of lines obtained using Hough transform
 - [**estimate_homography.py**](./estimate_homography.py): Helper functions which help in bilinear interpolation and projecting images to a canvas using Homography matrix
+
+## Results
+
+
+
+
 
