@@ -62,7 +62,7 @@ Corners before in **Magenta** (found by intersection of hough lines) and after r
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_Radial.png" alt="Corners after processing" width="448" height="336" />
 Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - Without Radial Distortion incorportated
 
-
+<br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_Radial.png" alt="Corners after processing" width="448" height="336" />
 Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - WITH Radial Distortion incorportated
 
