@@ -46,8 +46,12 @@ python calibrate_camera.py
 - [Input dataset - click click](./Dataset_1)
 - [Results for Input Dataset - more clicks](./results)
 
+#### Input Images
 |<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_28.jpg" alt="Pic_28.jpg" width="320" height="240" /> Pic_28.jpg
 |<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" /> Pic_40.jpg  
 
+#### Hough Lines and Processing
 
+|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/lines_Pic_28.jpg" alt="Lines before processing" width="320" height="240" />
 
+|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
