@@ -47,17 +47,13 @@ python calibrate_camera.py
 - [Results for Input Dataset - more clicks](./results)
 
 #### Input Images
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_28.jpg" alt="Pic_28.jpg" width="320" height="240" /> Pic_28.jpg
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" /> Pic_40.jpg  
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_28.jpg" alt="Pic_28.jpg" width="320" height="240" /> Pic_28.jpg
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" /> Pic_40.jpg  
 
 #### Hough Lines and Processing
-
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/lines_Pic_28.png" alt="Lines before processing" width="400" height="600"/>
-
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
-
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/lines_Pic_28.png" alt="Lines before processing" width="400" height="600"/>
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
 
 #### Corners and refinement
-
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="320" height="240" />
 Corners before (found by intersection of hough lines) and after refinement 
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="320" height="240" />
