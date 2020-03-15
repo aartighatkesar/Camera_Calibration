@@ -47,26 +47,31 @@ python calibrate_camera.py
 - [Results for Input Dataset - more clicks](./results)
 
 #### Input Images
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_28.jpg" alt="Pic_28.jpg" width="320" height="240" /> Pic_28.jpg
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" /> Pic_40.jpg  
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/input_imgs/Pic_28.jpg" alt="Pic_28.jpg" width="320" height="240" /> Pic_28.jpg
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/input_imgs/Pic_40.jpg" alt="Pic_40.jpg" width="320" height="240" /> Pic_40.jpg  
+
 
 #### Hough Lines and Processing
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/lines_Pic_28.png" alt="Lines before processing" width="400" height="600"/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/corners_lines/lines_Pic_28.png" alt="Lines before processing" width="400" height="600"/>
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/corners_lines/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
 
 #### Corners and refinement
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="448" height="336" />
-Corners before in **Magenta** (found by intersection of hough lines) and after refinement in **Green**
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/corners_lines/corners_afterPic_28.jpg" alt="Corners after processing" width="448" height="336" />
+Corners before in **Magenta** (found by intersection of hough lines) and after refinement in **Green**.
 These corners would be used as ground truth image coordinates for the projection of world coordinates
+
+#### World coordinates
+The world coordinates are taken as [0, 0, 0, 0] for the point marked "0" in the above image and increased by 25 and 25 in x, y directions for subsequent labelled points in the above image.
+That is, "0": [0, 0, 0, 0], "1": [25, 0, 0, 0], "8": [0, 25, 0, 0]  and so on.
 
 #### Camera Intrinsic and Extrinsic Parameters
 _Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - Without Radial Distortion incorportated_
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_No_Radial.png" alt="Corners after processing" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/Latex_No_Radial.png" alt="Corners after processing" width="448" height="336" />
 <br/>
 _Camera Intrinsic Parameters (K) and Extrinsic Parameters ([R|t]) before and after Levenberg Marquardt optimization - WITH Radial Distortion incorportated_
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/Latex_Radial.png" alt="Corners after processing" width="448" height="336" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/Latex_Radial.png" alt="Corners after processing" width="448" height="336" />
 <br/>
 
 #### Visual Results of Camera Parameters
@@ -76,21 +81,21 @@ _Projecting the world coordinates of Pic_28.jpg using the calculated camera matr
 The right image is after the refinement of parameters. Blue are the estimated projection of world coordinates in image plane using camera matrix. 
 Green are the ground truth image plane projections of world coordinates._
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="1000" height="480" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="1000" height="480" />
 <br/>
 <br/>
 _Projecting image coordinate estimation of world coordinates using Pic_40.jpg camera matrix onto Pic_28.jpg_
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="1000" height="480" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="1000" height="480" />
 
 #### Radial Distortion included
 _Projecting the world coordinates of Pic_28.jpg using the calculated camera matrix. The left image is before the LM optimization for refinement of parameters. 
 The right image is after the refinement of parameters. Blue are the estimated projection of world coordinates in image plane using camera matrix. 
 Green are the ground truth image plane projections of world coordinates._
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="1000" height="480" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="1000" height="480" />
 <br/>
 <br/>
 _Projecting image coordinate estimation of world coordinates using Pic_40.jpg camera matrix onto Pic_28.jpg_
 <br/>
-<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28_with_radial.jpg" width="1000" height="480" />
+<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/master/images_for_readme/fixed_img_proj/Pic_40_Pic_28_with_radial.jpg" width="1000" height="480" />
