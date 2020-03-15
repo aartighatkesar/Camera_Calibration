@@ -52,6 +52,6 @@ python calibrate_camera.py
 
 #### Hough Lines and Processing
 
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/lines_Pic_28.jpg" alt="Lines before processing" width="320" height="240" />
+|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/lines_Pic_28.jpg" alt="Lines before processing" width="320" height="240" />
 
-|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/input_imgs/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
+|<img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/corners_lines/processed_lines_Pic_28.jpg" alt="Lines after processing" width="320" height="240" />
