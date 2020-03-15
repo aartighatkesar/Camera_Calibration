@@ -78,6 +78,7 @@ Blue are the ground truth image plane projections of world coordinates._
 <br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/no_radial/world_proj_Pic_28.jpg" width="1000" height="480" />
 <br/>
+<br/>
 _Projecting image coordinate estimation of world coordinates using Pic_40.jpg camera matrix onto Pic_28.jpg_
 <br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/fixed_img_proj/Pic_40_Pic_28.jpg" width="1000" height="480" />
@@ -88,6 +89,7 @@ The right image is after the refinement of parameters. Green are the estimated p
 Blue are the ground truth image plane projections of world coordinates._
 <br/>
 <img src="https://github.com/aartighatkesar/Camera_Calibration/blob/in-progress/images_for_readme/self_proj/radial/world_proj_Pic_28.jpg" width="1000" height="480" />
+<br/>
 <br/>
 _Projecting image coordinate estimation of world coordinates using Pic_40.jpg camera matrix onto Pic_28.jpg_
 <br/>
